@@ -34,7 +34,15 @@ commands:
   #           #  Add revert code here. You can find this in the Getting Started section.
   #             exit 1
   #           fi
-            
+  aws-setup:
+    description: install aws cli
+    parameters:
+    steps:
+      - run:
+          name: install aws cli
+          command: |
+              sudo apt-get update
+              sudo apt-get install -y awscli                
 jobs:
   build-frontend:
     docker:
