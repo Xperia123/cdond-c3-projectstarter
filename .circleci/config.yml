@@ -272,37 +272,59 @@ jobs:
             # Your code here
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-                # If you are using kvdb.io, generate the bucket ID "PoS9Es9rx64e494x7pyuUr" in your local terminal first
-                curl https://kvdb.io/PoS9Es9rx64e494x7pyuUr/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 1
+                # If you are using kvdb.io, generate the bucket ID "BGx73YUvdxxxJFrE6iA5Rc" in your local terminal first
+                curl https://kvdb.io/BGx73YUvdxxxJFrE6iA5Rc/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 1
                 echo "1 ${CIRCLE_WORKFLOW_ID:0:7}"
                 # echo "1" >> ~/project/backend/migration-results.txt
             else
-                curl https://kvdb.io/PoS9Es9rx64e494x7pyuUr/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 0
+                curl https://kvdb.io/BGx73YUvdxxxJFrE6iA5Rc/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 0
                 echo "0 ${CIRCLE_WORKFLOW_ID:0:7}"
             fi      
             # cat ~/project/backend/migration-results.txt
      # Here's where you will add some code to rollback on failure      
 
-#   deploy-frontend:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Get backend url
-#           command: |
-#             # your code here
-#             export API_URL="http://${BACKEND_IP}:3030"
-#             echo "${API_URL}"
-#       - run:
-#           name: Deploy frontend objects
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure      
+  deploy-frontend:
+    docker:
+      # Docker image here that supports AWS CLI
+      - image: cimg/node:16.13.1
+    steps:
+      # Checkout code from git
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+            sudo apt install -y gzip tar
+      - aws-setup
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints: ["c2:4a:4b:20:fd:1b:03:0f:38:16:f6:b2:3e:ce:8b:0e"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
+            export BACKEND_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo "backend_url http://${BACKEND_IP}:3030"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      - run:
+          name: Deploy frontend objects
+          command: |
+            # your code here
+            cd frontend
+            echo $(pwd) 
+            npm install
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive    
+            echo $(pwd) 
+            echo $(hostname -I)
+            echo $(curl ifconfig.me)
+      # Here's where you will add some code to rollback on failure      
                     
 #   deploy-backend:
 #     docker:
@@ -401,8 +423,8 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
-      # - deploy-frontend:
-      #     requires: [run-migrations]
+      - deploy-frontend:
+          requires: [run-migrations]
       # - deploy-backend:
       #     requires: [run-migrations]
       # - smoke-test:
