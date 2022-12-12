@@ -497,7 +497,7 @@ jobs:
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
                     --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             echo Stack names= "${STACKS[@]}"
-            OldWorkflowID = "a700c17"
+            # OldWorkflowID = "a700c17"
             # Remove old stacks and files
             if [ -z "$var" ]
             then
