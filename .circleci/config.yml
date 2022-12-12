@@ -29,7 +29,7 @@ commands:
           command: |
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
             source ~/.profile 
-            SUCCESS=$(curl --insecure  https://kvdb.io/PoS9Es9rx64e494x7pyuUr/migration_<< parameters.workflow_id >>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/BGx73YUvdxxxJFrE6iA5Rc/migration_<< parameters.workflow_id >>)
             echo $SUCCESS
             if (( $SUCCESS == 1 ));
             then
@@ -435,7 +435,7 @@ jobs:
             if curl -s ${URL} | grep "Welcome"
             then
               # Change this to 0 after the job fails
-              exit 0
+              exit 1
             else
               exit 1
             fi
